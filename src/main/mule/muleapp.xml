@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="9de7238f-529b-4651-80a9-c092efce59db" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="muleappFlow" doc:id="fcc4ace1-1d5f-4c43-82cb-41bf582ccd23" >
+		<http:listener doc:name="Listener" doc:id="a8eabace-4546-4371-9a52-921cfdc9904e" config-ref="HTTP_Listener_config" path="/muleapp"/>
+		<set-variable value="#[uuid()]" doc:name="Correlationid" doc:id="e3498bdc-4452-4731-a4d3-ca107bd48cdd" variableName="Correlationid"/>
+		<logger level="INFO" doc:name="Logger" doc:id="5a2ab8f2-1e54-43e5-a650-ec3d29cb505d" message="Correlationid - #[vars.Correlationid]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="396a5778-8433-4054-8e2b-70aecdd40290" message="Correlationid - #[vars.Correlationid] - received payload - #[payload]"/>
+		<set-variable value="" doc:name="Set Variable" doc:id="88ce20ac-fb2d-45b8-8212-df4181d3a701" variableName="Originalpayload"/>
+		<ee:transform doc:name="Transform Message" doc:id="b8af951b-008f-4b6c-847e-19b499b97c43">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+---
+ {
+ 	"count" : "1"
+ }	
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="counter" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"count": "1"
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="4afccbe8-0eae-4f58-a3d7-2d6fc5d57364" message="Correlationid  payload to xml - #[payload]&amp;counter - #[vars.counter]"/>
+		<set-payload value="Hi Pranathi..." doc:name="Set Payload" doc:id="c8b24ef7-59f4-437c-8d57-98d4763ae5c2" />
+		<flow-ref doc:name="Flow Reference calling subflow" doc:id="f5a9181e-b98b-469e-9fe0-21f6a0a36932" name="muleappSub_Flow" target="123"/>
+		<flow-ref doc:name="Flow Reference calling privateflow" doc:id="aeededea-cc05-47af-8440-6d4dfd00c0a7" name="muleappFlow1" target="xyz"/>
+		<logger level="INFO" doc:name="Logger" doc:id="180121b4-1c18-45a1-990f-952718181878" message="Correlationid - #[vars.Correlationid] -#[payload]"/>
+	</flow>
+	<sub-flow name="muleappSub_Flow" doc:id="43e5e78e-42f8-450e-80ed-7c35dd90975b" >
+		<logger level="INFO" doc:name="Subflowlogger" doc:id="409e9fb7-f126-4cb3-a458-cef84155c86d" message="Correlationid - #[vars.Correlationid]"/>
+	</sub-flow>
+	<flow name="muleappFlow1" doc:id="02d7927a-c692-4c7b-8238-b3290e272282" >
+		<logger level="INFO" doc:name="Privateflowlogger" doc:id="6293e8cb-caa6-440d-be6f-410ad80ca820" message="Correlationid - #[vars.Correlationid]"/>
+	</flow>
+</mule>
